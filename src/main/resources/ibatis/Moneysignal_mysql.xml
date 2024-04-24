@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="MoneySignal">
+
+	<!-- <typeAlias alias="dataMap" type="kr.infinisoft.common.util.DataMap"/>	
+	
+	<select id="getAcctShopInfo" parameterClass="dataMap" resultClass="dataMap">
+		select 
+			a.merchant_no as merchant_no,
+			a.mid as mid,
+			a.license_key as license_key,
+			a.use_status as use_status,
+			a.response_type as response_type,
+			a.name as name,
+			a.nickname as nickname,
+			a.regist_type as regist_type,
+			a.regist_num as regist_num,
+			a.address1 as address1,
+			a.address2 as address2,
+			a.post_no as post_no,
+			a.tel_no as tel_no,
+			a.fax_no as fax_no,
+			a.boss_name as boss_name,
+			a.boss_regist_num as boss_regist_num,
+			a.boss_contact_no as boss_contact_no,
+			a.boss_email as boss_email,
+			a.manager_name as manager_name,
+			a.manager_contact_no as manager_contact_no,
+			a.manager_email as manager_email,
+			a.memo1 as memo1,
+			a.memo2 as memo2,
+			a.memo3 as memo3,
+			a.memo4 as memo4,
+			a.acntno as acntno,
+			a.acntnm as acntnm,
+			a.svc_id as svc_id,
+			a.income_noti_url as income_noti_url,
+			a.outcome_noti_url as outcome_noti_url,
+			a.income_max_noti_cnt as max_noti_cnt,
+			a.income_health_chk_flg as income_health_chk_flg,
+			a.regist_date as regist_date
+		from acct.tb_acct_shop a left outer join acct.tb_acct_shop_svc b
+		on a.mid = b.mid
+		where 1=1
+		and b.service_method = '04'
+	    and a.use_status = '01'
+	    and b.use_status = '01'
+		<isNotNull prepend="AND" property="merchantNo"> a.merchant_no = #merchantNo# </isNotNull>
+		<isNotNull prepend="AND" property="svcId"> b.inst_id = #svcId# </isNotNull>
+	</select>
+	
+	<insert id="insIncome" parameterClass="dataMap">
+      insert into acct.tb_income (
+      	mid,
+		svc_id,
+		trans_key,
+		bankcode,
+		acntno,
+		income_dt,
+		day_order,
+		income_div,
+		income_nm,
+		amt,
+		remain_amt,
+		trans_desc,
+		reg_dt,
+		inout_cd
+      )
+      values
+      ( 
+      	#mid#,
+		#svcId#,
+		#transKey#,
+		#bankcode#,
+		#acntno#,
+		#incomeDt#,
+		#dayOrder#,
+		#incomeDiv#,
+		#incomeNm#,
+		#incomeAmt#,
+		#remainAmt#,
+		#transDesc#,
+		date_format(now(), '%Y%m%d%H%i%s'),
+		#inoutCd#
+      )
+      <selectKey keyProperty="transSeq" resultClass="int">
+		SELECT LAST_INSERT_ID()
+	  </selectKey>
+  	</insert>
+  	
+  	<select id="getIncomeList" parameterClass="dataMap" resultClass="dataMap">
+		select 
+			mid,
+			svc_id,
+			trans_key,
+			bankcode,
+			acntno,
+			income_dt,
+			day_order,
+			income_div,
+			income_nm,
+			amt,
+			remain_amt,
+			trans_desc,
+			reg_dt,
+			mod_dt,
+			noti_dt,
+			noti_result,
+			noti_fail_cnt
+		from acct.tb_income
+		where 1=1
+		<isNotNull prepend="AND" property="mid"> mid = #mid# </isNotNull>
+		<isNotNull prepend="AND" property="svcId"> svc_id = #svcId# </isNotNull>
+		<isNotNull prepend="AND" property="bankcode"> bankcode = #bankcode# </isNotNull>
+		<isNotNull prepend="AND" property="acntno"> acntno = #acntno# </isNotNull>
+		<isNotNull prepend="AND" property="incomeDt"> income_dt = #incomeDt# </isNotNull>
+		<isNotNull prepend="AND" property="dayOrder"> day_order = #dayOrder# </isNotNull>
+		<isNotNull prepend="AND" property="incomeNm"> income_nm = #incomeNm# </isNotNull>
+	</select>
+	
+	<select id="getIncomeNotiList" resultClass="dataMap">
+		<![CDATA[
+		select 
+			a.mid as "mid",
+			a.svc_id as "svcId",
+			a.trans_key as "transKey",
+			a.bankcode as "bankcode",
+			a.acntno as "acntno",
+			a.income_dt as "incomeDt",
+			a.day_order as "dayOrder",
+			a.income_div as "incomeDiv",
+			acct.fn_income_nm(a.income_nm) as "incomeNm",
+			a.amt as "amt",
+			a.remain_amt as "remainAmt",
+			a.trans_desc as "transDesc",
+			a.reg_dt as "regDt",
+			a.mod_dt as "modDt",
+			a.noti_dt as "notiDt",
+			a.noti_result as "notiResult",
+			a.noti_fail_cnt as "notiFailCnt",
+		  	b.income_max_noti_cnt as "maxNotiCnt",
+		  	b.acntno as "acntno",
+		  	b.acntnm as "acntnm",
+		  	b.income_noti_url as "incomeNotiUrl",
+		  	b.outcome_noti_url as "outcomeNotiUrl"
+		from acct.tb_income a, acct.tb_acct_shop b, acct.tb_acct_shop_svc c
+		where 1=1
+		and a.mid = b.mid
+		and a.mid = c.mid
+		and a.svc_id = c.inst_id
+		and c.service_method = '04'
+		and (a.noti_result is null or a.noti_result != '0000')
+		and ifnull(a.noti_fail_cnt,0) < (select income_max_noti_cnt from acct.tb_acct_shop i where i.mid = a.mid)
+		]]>
+	</select>
+	
+	<update id="updateIncomeSuccess" parameterClass="dataMap">
+		update acct.tb_income set mod_dt = date_format(now(), '%Y%m%d%H%i%s'),
+			noti_dt = date_format(now(), '%Y%m%d%H%i%s'),
+			noti_result = '0000'
+		where 1=1
+		and mid = #mid#
+		and svc_id = #svcId#
+		and trans_key = #transKey#
+  	</update>
+  	
+  	<update id="updateIncomeFail" parameterClass="dataMap">
+		update acct.tb_income set mod_dt = date_format(now(), '%Y%m%d%H%i%s'),
+			noti_fail_cnt = noti_fail_cnt + 1
+		where 1=1
+		and mid = #mid#
+		and svc_id = #svcId#
+		and trans_key = #transKey#
+  	</update>
+  	
+  	<select id="getMerchantInfo" parameterClass="dataMap" resultClass="dataMap">
+   		select a.mid as mid,
+		       a.gid as gid,
+		       a.aid as aid,
+		       b.inst_key as inst_key
+		from PG.tb_merchant a left join acct.tb_acct_shop_svc b
+		on a.mid = b.mid
+		where service_method = '03'
+		and use_status = '01'
+		and transfer_ver = '3'
+		and inst_key = #instKey#
+	</select>
+  	
+	<update id="insTransferVacctTrans" parameterClass="dataMap">
+      INSERT INTO PG.tb_transfer_vacct_trans
+            (tid, app_req_dt, app_req_tm, app_dt, app_tm, mid, svc_cd, svc_prdt_cd, gid, aid, 
+             state_cd, trans_type, amt, vacct_no, bank_cd, input_cl, input_acct_nm, join_msg_seq, rslt_cd, rslt_msg,
+             input_bank_cd, input_base_dt, cash_rcpt_flg, otid, fn_id, pgsvr_nm, result_cd) 
+        VALUES
+            (#tid#, #appReqDt#, #appReqTm#, #appDt#, #appTm#, #mid#, #svcCd#, #svcPrdtCd#, #gid#, #aid#,
+             #stateCd#, #transType#, #amt#, #vacctNo#, #bankCd#, #inputCl#, #inputAcctNm#, #joinMsgSeq#, #rsltCd#, #rsltMsg#,
+             #inputBankCd#, #inputBaseDt#, #cashRcptFlg#, #otid#, #fnId#, #pgsvrNm#, #resultCd#)
+  	</update>
+  	
+  	<select id="getTransferDeposit" parameterClass="dataMap" resultClass="Integer">
+   		select count(1)
+		from PG.tb_transfer_deposit
+		where 1=1
+		and mid = #mid#
+	  	and mom_accnt_no = #momAccntNo#
+	</select>
+	
+	<update id="insTransferDeposit" parameterClass="dataMap">
+		INSERT INTO PG.tb_transfer_deposit
+            (mid,bank_cd,accnt_no,mom_bank_cd,mom_accnt_no,dep_amt,use_amt,ref_amt,bal_amt,update_dt) 
+        VALUES
+            (#mid#,#bankCd#,#vacctNo#,#momBankCd#,#momAccntNo#,#amt#,0,0,#amt#,date_format(now(),'%Y%m%d%H%i%s'))
+  	</update>
+	
+	<update id="updateTransferDeposit" parameterClass="dataMap">
+		update PG.tb_transfer_deposit 
+            set dep_amt = dep_amt + #amt#,
+                bal_amt = bal_amt + #amt#,
+                update_dt = date_format(now(),'%Y%m%d%H%i%s')
+        where mid = #mid#
+        and mom_bank_cd = #momBankCd#
+        and mom_accnt_no = #momAccntNo#
+  	</update>
+  	
+  	<insert id="sendSmsIncomeSystemErrorInfo" parameterClass="dataMap">
+		insert into `sjsms`.`msg_queue` (callback, dstaddr, request_time, text)
+		select callback, cellphone as dstaddr, now(), #msg# as msg
+		from `PG`.`tb_system_contract_user`
+		where err_type = #errType#
+	</insert> -->
+</sqlMap>

@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Kib">
+
+	<!-- <typeAlias alias="dataMap" type="kr.infinisoft.common.util.DataMap"/>
+	<typeAlias alias="acctReqVO" type="kr.infinisoft.acct.kib.vo.AcctReqVO"/>
+
+
+	<insert id="kibTransReqInsert" parameterClass="acctReqVO">
+		insert into acct.tb_acct_trans_req
+		(merchant_no,license_key,service_method,bank_cd,iacct_no,iacct_nm)
+		values
+		(#merchantNo#,#licenseKey#,#serviceMethod#,#bankCd#,#iacctNo#,#iacctNm#)
+		<selectKey resultClass="int">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+
+	
+	<select id="kibBankCdCheckCnt" parameterClass="String" resultClass="int">
+	    select count(0) cnt from acct.tb_acct_code where groupcd = '0001' and codecd = #value#
+	</select>
+	
+	<select id="kibUseShopInfo" parameterClass="acctReqVO" resultClass="dataMap">
+		select 
+			a.merchant_no,
+			a.use_status,
+			a.license_key,
+			a.response_type,
+			ifnull(b.transfer_ver, '1') as transfer_ver,
+			b.inst_id,
+			b.inst_key
+		from acct.tb_acct_shop a, acct.tb_acct_shop_svc b
+		where a.mid = b.mid
+		and b.service_method = '01'		
+		and  merchant_no = #merchantNo#
+	</select>
+	
+	<insert id="kibTransInsert" parameterClass="dataMap">
+		insert into acct.tb_acct_trans
+		(req_seq,merchant_no,service_method,bank_cd,iacct_no,iacct_nm,result_acct_nm,result_code,result_msg)
+		values
+		(#reqSeq#,#merchantNo#,#serviceMethod#,#bankCd#,#iacctNo#,#iacctNm#,#resultAcctNm#,#resultCode#,#resultMsg#)
+		<selectKey keyProperty="transSeq" resultClass="int">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<select id="kibErrorConvert" parameterClass="String" resultClass="dataMap">
+		select 
+			codecd as kibCode , 
+			value as kibMsg, 
+			value2 as infiniCode 
+		from acct.tb_acct_code
+		where groupcd = '0002' and codecd = #value#
+	</select>
+
+	<update id="httpTimeUpdate" parameterClass="dataMap">
+		update acct.tb_acct_trans
+		set
+			request_time = #requestTime#,
+			response_time = #responseTime#
+		where trans_seq = #transSeq#
+	</update>
+	
+	
+	<select id="apiShopInfo" parameterClass="dataMap" resultClass="dataMap">
+		select 
+			name,
+			mid,
+			license_key as merkey,
+			use_status,
+			client_ip,
+			transfer_sms_cl,
+			sms_rcv_hp,
+			ip_check_cl
+		from 
+			acct.tb_acct_shop
+		where 
+			mid = #mid#
+	</select>
+	
+	<select id="apiServiceInfo" parameterClass="dataMap" resultClass="dataMap">
+		select 
+			mid,
+			use_status,
+			service_method,
+			transfer_ver,
+			inst_id,
+			inst_key,
+			inst_bank_cd,
+		    dep_bank_cd,
+		    dep_no,
+		    limit_amt,
+		    limit_amt_day
+		from 
+			acct.tb_acct_shop_svc
+		where 
+			mid = #mid#
+		and service_method =  #service#
+		and use_status = '01'
+	</select>
+	
+	
+	<update id="insertAcntReq" parameterClass="dataMap">
+		insert into acct.tb_acnt_req
+		(
+			mid,
+			tid,
+			moid,
+			req_dt,
+			bank_code,
+			acnt_no,
+			acnt_nm
+		)
+		values
+		(
+			#mid#,
+			#tid#,
+			#moid#,
+			#reqDt#,
+			#bankCode#,
+			#acntNo#,
+			#acntNm#
+		)
+	</update>
+	
+	<update id="updateAcntReq" parameterClass="dataMap">
+		update acct.tb_acnt_req
+		set
+			doc_no = #docNo#,
+			result_acnt_nm = #resultAcntNm#,
+			result_code = #resultCode#,
+			result_msg = #resultMsg#,
+			trans_dt = #transDt#
+		where
+			tid = #tid#
+		and mid = #mid#
+	</update>
+	
+	
+	<insert id="insertAcntTransferReq" parameterClass="dataMap">
+		insert into acct.tb_transfer_req
+		(
+			mid,
+			tid,
+			moid,
+			req_dt,
+			bank_code,
+			acnt_no,
+			acnt_nm,
+			amt,
+			dep_acnt_no,
+			dep_acnt_nm
+		)
+		values
+		(
+			#mid#,
+			#tid#,
+			#moid#,
+			#reqDt#,
+			#bankCode#,
+			#acntNo#,
+			#acntNm#,
+			#amt#,
+			#depAcntNo#,
+			#depAcntNm#
+		)
+	</insert>
+	
+	<update id="updateAcntTransferReq" parameterClass="dataMap">
+		update acct.tb_transfer_req
+		set
+			doc_no = #docNo#,
+			result_acnt_no = #resultAcntNo#,
+			result_acnt_nm = #resultAcntNm#,
+			result_amt = #amt#,
+			remain_amt = #remainAmt#,
+			result_code = #resultCode#,
+			result_msg = #resultMsg#,
+			trans_dt = #transDt#
+		where
+			tid = #tid#
+		and mid = #mid#
+	</update>
+	
+	<select id="getAcntTransDepositNotiList" resultClass="dataMap">
+		<![CDATA[
+		select 
+			a.mid as "mid",
+			a.tid as "tid",
+      		a.moid as "moid",
+      		a.req_dt as "reqDt",
+			a.bank_code as "bankCode",
+			a.acnt_no as "acntNo",
+		  	a.acnt_nm as "acntNm",
+      		a.amt as "amt",
+			a.remain_amt as "remainAmt",
+		    a.dep_acnt_no as "depAcntNo",
+		    a.dep_acnt_nm as "depAcntNm",
+		    a.result_code as "resultCode",
+		    a.result_msg as "resultMsg",
+		    a.trans_dt as "transDt",
+			a.noti_dt as "notiDt",
+			a.noti_result as "notiResult",
+			a.noti_fail_cnt as "notiFailCnt",
+	  		b.trans_max_noti_cnt as "maxNotiCnt",
+      		b.trans_noti_url as "transNotiUrl"
+		from acct.tb_transfer_req a, acct.tb_acct_shop b
+		where 1=1
+		and a.mid = b.mid
+		and a.result_code in ('0000', '2000')
+		and (a.noti_result is null or ((a.result_code = '0000' and a.noti_result != '0000') or (a.result_code = '2000' and a.noti_result != '2000')))
+		and ifnull(a.noti_fail_cnt,0) < (select trans_max_noti_cnt from acct.tb_acct_shop i where i.mid = a.mid)
+		]]>
+	</select>
+	
+	<update id="updateAcntTransDepositSuccess" parameterClass="dataMap">
+		update acct.tb_transfer_req set mod_dt = date_format(now(), '%Y%m%d%H%i%s'),
+			noti_dt = date_format(now(), '%Y%m%d%H%i%s'),
+			noti_result = #resultCode#,
+			noti_fail_cnt = 0
+		where 1=1
+		and mid = #mid#
+		and tid = #tid#
+  	</update>
+  	
+  	<update id="updateAcntTransDepositFail" parameterClass="dataMap">
+		update acct.tb_transfer_req set mod_dt = date_format(now(), '%Y%m%d%H%i%s'),
+			noti_fail_cnt = noti_fail_cnt + 1
+		where 1=1
+		and mid = #mid#
+		and tid = #tid#
+  	</update>
+  	
+  	<select id="chkDupTid" parameterClass="String" resultClass="int">
+	    select count(tid) from acct.tb_transfer_req where tid = #tid#
+	</select>
+	
+  	<select id="chkDupMoid" parameterClass="dataMap" resultClass="int">
+	    select count(moid) from acct.tb_transfer_req
+	    where substring(req_dt,1,8) = date_format(now(), '%Y%m%d')
+	    and mid = #mid#
+		and moid = #moid#
+	</select>
+	송금거래 정보조회 2021.01 수정
+	<select id="getAcctTransferInfoByTid" parameterClass="String" resultClass="dataMap">
+	    select substr(trans_dt,1,8) as "orgTransDt",
+	    	   trans_dt as "orgTransDttm",
+	    	   acnt_nm as "orgAcntNm",
+	    	   doc_no as "orgDocNo",
+	    	   tid as "tid",
+           	   moid as "moid",
+               req_dt as "reqDt",
+               dep_acnt_no as "depAcntNo",
+               dep_acnt_nm as "depAcntNm",
+               result_code as "orgResultCode",
+               bank_code as "bankCode",
+               acnt_no as "acntNo",
+               amt,
+               remain_amt as "remainAmt"
+ 		from acct.tb_transfer_req where tid = #tid:VARCAHR# and doc_no is not null
+	</select>
+	
+	<update id="updateAcntTransferSearchResult" parameterClass="dataMap">
+		update acct.tb_transfer_req
+		set
+			result_acnt_no = #acntNo#,
+			result_acnt_nm = #acntNm#,
+			result_amt = #amt#,
+			remain_amt = 0,
+			result_code = #resultCode#,
+			result_msg = #resultMsg#,
+			trans_dt = #transDt#
+		where
+			tid = #tid#
+	</update>
+	
+	<select id="transServiceInfo" parameterClass="dataMap" resultClass="dataMap">
+		select a.dep_bank_cd as "setDepBankCd",
+		       a.dep_no as "setDepNo",
+		       b.bank_cd as "inBankCd",
+		       b.accnt_no as "inAccntNo",
+		       b.mom_bank_cd as "momBankCd",
+		       b.mom_accnt_no as "momAccntNo",
+		       b.dep_amt as "depAmt",
+		       b.use_amt as "useAmt",
+		       b.req_amt as "reqAmt",
+          	   b.bal_amt - b.req_amt as "possibleAmt",
+		       b.bal_amt as "balAmt"
+		from acct.tb_acct_shop_svc a  left outer join PG.tb_transfer_deposit b
+		on a.mid = b.mid
+		where 1=1
+		and a.service_method = '03'
+		and a.transfer_ver in ('2','3','4')
+		and a.mid = #mid#
+		and a.dep_no = #depAcntNo#
+	</select>
+	
+	<update id="updateAcntTransferReqAmountStart" parameterClass="dataMap">
+		update PG.tb_transfer_deposit
+		set
+			req_amt = req_amt + #amt#
+		where mid = #mid#
+		and accnt_no = #depAcntNo#
+	</update>
+	
+	<update id="updateAcntTransferReqAmountEnd" parameterClass="dataMap">
+		update PG.tb_transfer_deposit
+		set
+			req_amt = req_amt - #amt#
+		where mid = #mid#
+		and accnt_no = #depAcntNo#
+	</update>
+	
+	<update id="updateAcntTransferDeposit" parameterClass="dataMap">
+		update PG.tb_transfer_deposit
+		set
+			use_amt = use_amt + #amt#,
+			bal_amt = bal_amt - #amt#,
+			update_dt = date_format(now(), '%Y%m%d%H%i%s')
+		where mid = #mid#
+		and accnt_no = #depAcntNo#
+	</update>
+	
+	<select id="getRemainAmtByMid" parameterClass="dataMap" resultClass="String">
+		select bal_amt as "balAmt"
+		from PG.tb_transfer_deposit b
+		where 1=1
+		and mid = #mid#
+		and accnt_no = #depAcntNo#
+	</select>
+	
+	<insert id="sendSmsTransferSystemErrorInfo" parameterClass="dataMap">
+		insert into `sjsms`.`msg_queue` (callback, dstaddr, request_time, text)
+		select callback, cellphone as dstaddr, now(), #msg# as msg
+		from `PG`.`tb_system_contract_user`
+		where err_type = #errType#
+	</insert>
+	
+	<select id="getMerDptAcctInfo" parameterClass="dataMap" resultClass="dataMap">
+		select '0000' as "resultCode",
+		       '정상처리' as "resultMsg", 
+		       dep_amt as "totDptAmt",
+			   use_amt as "totWdrAmt",
+			   bal_amt as "remainAmt",
+			   date_format(now(), '%Y%m%d%H%i%s') as "transDt"
+		from PG.tb_transfer_deposit
+		where 1=1
+		and mid = #mid#
+		and accnt_no = #depAcntNo#
+	</select>
+	
+	<select id="chkDupDocNo" parameterClass="String" resultClass="int">
+	    select count(doc_no) from acct.tb_transfer_req
+	    where 1=1
+		and date_format(req_dt, '%Y%m%d') = date_format(now(), '%Y%m%d')
+	    and doc_no = #docNo#
+	</select>
+	
+	<insert id="sendTransferSms" parameterClass="dataMap">
+        INSERT INTO sjsms.msg_queue
+            (msg_type, callback, dstaddr, subject, text, request_time) 
+        VALUES
+            (#msgType#, #fromPhone#, #toPhone#, #subject#, #contents#, now())
+        <selectKey keyProperty="mseq" resultClass="long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+    
+    <update id="insertMsgTrans" parameterClass="dataMap">
+    	INSERT INTO PG.tb_msg_trans(
+			MSG_SEQ
+		  	,MID
+		  	,TRANS_SEQ
+		  	,SVC_TYPE
+		  	,MSG_TYPE
+		  	,TRANS_DT
+		  	,TRANS_TM
+		  	,REGIST_DATE
+		  	,WORKER
+		) VALUES (
+		  #msgSeq#,
+		  #mid#,
+		  #transSeq#,
+		  #svcType#,
+		  #msgType#,
+		  #transDt#,
+		  #transTm#,
+		  now(),
+		  #mid#
+		)
+    </update>
+    
+    <select id="getBankNm" parameterClass="String" resultClass="String">
+		select value from acct.tb_acct_code where groupcd = '0001' and codecd = #value#
+	</select>
+	가맹점 정보 조회 추가 2021.01
+	<select id="selectShopInfo" parameterClass="dataMap" resultClass="dataMap">
+	    select a.mid, a.license_key, a.response_type, a.name, a.regist_type, 
+		       b.service_method, b.transfer_ver, b.inst_id, b.inst_key, b.inst_bank_cd,
+		       b.dep_bank_cd, b.dep_no, b.dep_nm
+		from acct.tb_acct_shop a left join acct.tb_acct_shop_svc b on a.mid=b.mid
+		and a.use_status='01'
+		where a.merchant_no=#merchantNo# and b.service_method=#serviceMethod#
+	</select>
+	
+		모게좌 잔액 조회 검증
+	<select id="remainAcntBankInfo" parameterClass="String" resultClass="dataMap">
+	    select mom_accnt_no, mom_bank_cd from PG.tb_transfer_deposit 
+	    where mid = #value#
+	</select>
+	
+	<select id="chkBlockAcntno" parameterClass="dataMap" resultClass="int">
+	    select count(mid) 
+	    from acct.tb_block_acntno 
+	    where 1=1
+	    and mid = #mid# 
+	    and bank_code = #bankCode# 
+	    and acnt_no = #acntNo#
+	    and use_yn = 'Y'
+	</select>
+	
+	<select id="ipCheck" parameterClass="dataMap" resultClass="int">
+		select
+		  count(1) as "cnt"
+		from PG.tb_download_ip a
+		where 1=1
+		and a.mid = #mid#
+		and a.down_flg = #downFlg#
+		and a.client_ip = #clientIp#
+		and date_format(now(), '%Y%m%d') between a.fr_dt and a.to_dt
+		AND a.use_cl = '1'
+	</select>
+	
+	<select id="systemStopCheck" parameterClass="dataMap" resultClass="int">
+		select
+		  count(1) as "cnt"
+		from PG.tb_system_stop_info a
+		where 1=1
+		and use_yn = 'Y'
+		and (fn_cd = #fnCd# or fn_cd = '999')
+		and date_format(now(), '%Y%m%d%H%i%s') between concat(stop_fr_dt,stop_fr_tm) and concat(stop_to_dt,stop_to_tm)
+	</select>
+	
+	<select id="getSumAmtByAccntNo" parameterClass="dataMap" resultClass="long">
+		select ifnull(sum(a.amt),0)
+		from acct.tb_transfer_req a
+		where 1=1
+		and a.mid = #mid#
+		and substring(a.req_dt,1,8) = date_format(now(), '%Y%m%d')
+		and a.result_code = '0000'
+		and a.acnt_no = #acntNo#
+	</select> -->
+	
+</sqlMap>

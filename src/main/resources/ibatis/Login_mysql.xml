@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Login">
+
+	<!-- <typeAlias  alias="dataMap" type="kr.infinisoft.common.util.DataMap"/>
+	<typeAlias  alias="userInfo" type="kr.infinisoft.acct.admin.vo.LoginUserInfo"/>
+	
+	<select id="loginCheck" parameterClass="userInfo" resultClass="userInfo">
+		select 
+			a.user_type as loginUserType,
+			a.user_id as loginUserId ,
+			a.user_name as loginUserName,
+			a.merchant_no as loginMerchantNo,
+			b.name as loginMerchantName
+		from acct.tb_acct_user a
+		left join acct.tb_acct_shop b on a.merchant_no = b.merchant_no
+		where a.user_id = #loginUserId#
+		and a.password = #encodeLoginUserPw#
+		and a.use_status = '01'
+	</select>
+	
+	<select id="lastLoginDate" parameterClass="userInfo" resultClass="String">
+		select date_format(login_date,'%Y-%m-%d %H:%i:%s') as lastLoginDate
+		from acct.tb_acct_user_log
+		where user_id = #loginUserId#
+		and merchant_no = #loginMerchantNo#
+		order by login_date desc
+		limit 1
+	</select>
+	
+	<insert id="loginLogInsert" parameterClass="userInfo">
+		insert into acct.tb_acct_user_log
+		(user_id,merchant_no,login_ip)
+		values
+		(#loginUserId#,#loginMerchantNo#,#loginUserIp#)
+	</insert> -->
+
+</sqlMap>

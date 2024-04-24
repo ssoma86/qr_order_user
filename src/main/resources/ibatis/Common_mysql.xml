@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Common">
+    
+    <!-- <typeAlias alias="dataMap" type="kr.infinisoft.common.util.DataMap"/>
+    <typeAlias alias="userInfo" type="kr.infinisoft.acct.admin.vo.LoginUserInfo"/>
+    <typeAlias  alias="transVO" type="kr.infinisoft.acct.admin.vo.TransSearchVO"/>
+    
+    
+    <insert id="accessLog" parameterClass="dataMap">
+    	insert into acct.tb_acct_access_log
+    	(merchant_no,user_id,request_url,access_ip)
+    	values
+    	(#merchantNo#,#userId#,#requestUrl#,#accessIp#)
+    </insert>
+    
+    
+    <select id="loginData" resultClass="dataMap">
+    	select
+    		a.user_id,
+    		date_format(a.login_date,'%Y-%m-%d %H:%i:%s') as login_date,
+    		a.login_ip,
+    		(select x.name from acct.tb_acct_shop x where x.merchant_no = a.merchant_no ) as merchant_name
+    	from acct.tb_acct_user_log a
+    	order by a.login_seq desc
+    	limit 0,10
+    </select>
+    
+    
+    <select id="errorRank" resultClass="dataMap">
+    	SELECT
+			a.error_code,
+			a.error_msg,
+		  	a.error_count
+		FROM
+		(
+			SELECT
+				a.result_code as error_code,
+				a.result_msg as error_msg,
+				count(a.result_code) as error_count
+		  	FROM acct.tb_acct_trans a
+			WHERE
+				a.result_code != '0000'
+			GROUP BY
+				a.result_code
+		) a
+		ORDER BY a.error_count desc
+		limit 0,10
+    </select>
+    
+    
+    <select id="monthData" resultClass="dataMap">
+    	select
+    		CONCAT(DATE_FORMAT(now(),'%Y'),'년 ',DATE_FORMAT(now(),'%m'),'월') ,
+			(select x.name from acct.tb_acct_shop x where x.merchant_no = a.targetDate ) as merchantName,
+			a.success_cnt,
+			a.fail_cnt,
+			a.total_cnt
+		from 
+			(
+				select
+					a.merchant_no as targetDate,
+					count(a.trans_seq) as total_cnt,
+					IFNULL(sum(if(a.result_code='0000',1,0)),0) as success_cnt,
+					IFNULL(sum(if(a.result_code!='0000',1,0)),0) as fail_cnt
+				from acct.tb_acct_trans a
+				where 1=1
+				and a.service_method = '01'
+				<![CDATA[ and DATE_FORMAT(a.regist_date,'%Y-%m') = date_format(now(),'%Y-%m') ]]>
+				group by a.merchant_no
+			) a
+    </select>
+    
+    
+    
+    <select id="mainGrid" parameterClass="transVO" resultClass="dataMap">
+       select
+			<isEqual property="searchType" compareValue="byMerchant">
+				(select x.name from acct.tb_acct_shop x where x.merchant_no = a.targetDate ) as targetDate,
+			</isEqual>
+			<isEqual property="searchType" compareValue="byDate">
+				a.targetDate,
+			</isEqual>
+			a.success_cnt,
+			a.fail_cnt,
+			a.total_cnt
+		from 
+			(
+				select
+					<isEqual property="searchType" compareValue="byDate">
+						DATE_FORMAT(a.regist_date,'%Y-%m-%d') as targetDate,
+					</isEqual>
+					<isEqual property="searchType" compareValue="byMerchant">
+						a.merchant_no as targetDate,
+					</isEqual>
+					count(a.trans_seq) as total_cnt,
+					IFNULL(sum(if(a.result_code='0000',1,0)),0) as success_cnt,
+					IFNULL(sum(if(a.result_code!='0000',1,0)),0) as fail_cnt
+				from acct.tb_acct_trans a
+				where 1=1
+				and a.service_method = #serviceMethod#
+				<isNotEmpty property="merchantNo">
+					and a.merchant_no = #merchantNo#
+				</isNotEmpty>
+				<isNotEmpty property="resultCode">
+					<isEqual property="resultCode" compareValue="0000">
+						and a.result_code = #resultCode#
+					</isEqual>
+					<isEqual property="resultCode" compareValue="FFFF">
+						and a.result_code != '0000'
+					</isEqual>
+				</isNotEmpty>
+				<isNotEmpty property="bankCd">
+					and a.bank_cd = #bankCd#
+				</isNotEmpty>
+				<isNotEmpty property="frDt">
+					<![CDATA[ and DATE_FORMAT(a.regist_date,'%Y-%m-%d') >= date_format(#frDt#,'%Y-%m-%d') ]]>
+				</isNotEmpty>
+				<isNotEmpty property="toDt">
+					<![CDATA[ and DATE_FORMAT(a.regist_date,'%Y-%m-%d') <= date_format(#toDt#,'%Y-%m-%d') ]]>
+				</isNotEmpty>
+				<isEqual property="searchType" compareValue="byDate">
+					group by DATE_FORMAT(a.regist_date,'%Y-%m-%d')
+				</isEqual>
+				<isEqual property="searchType" compareValue="byMerchant">
+					group by a.merchant_no
+				</isEqual>
+			) a
+			<isGreaterThan property="perpage" compareValue="0">
+				limit #page#, #perpage#
+			</isGreaterThan>
+	</select>
+    
+	
+	<select id="merchantList" parameterClass="userInfo" resultClass="dataMap">
+		select
+			merchant_no, name as merchant_name
+		from acct.tb_acct_shop
+		where 1=1
+		<isNotEqual property="loginUserType" compareValue="99">
+			and merchant_no = #loginMerchantNo#
+		</isNotEqual>
+	</select>
+	
+	
+    <select id="bankCodeList" resultClass="dataMap">
+    	select 
+    		codecd as bankCode,
+    		value as bankName
+    	from acct.tb_acct_code
+    	where groupcd = '0001'
+    </select>
+    
+    시작, 종료일 구하는 sql
+	<select id="getStDateAndEdDate" parameterClass="dataMap" resultClass="dataMap">
+		select
+		<isEmpty property="format">
+			DATE_ADD(now(), INTERVAL #terms# day) as st_date,now() as ed_date
+		</isEmpty>
+		<isNotEmpty property="format">
+			date_format(DATE_ADD(now(), INTERVAL #terms# day), #format#) as st_date, date_format(now(), #format#) as ed_date
+		</isNotEmpty>
+	</select> -->
+
+
+</sqlMap>

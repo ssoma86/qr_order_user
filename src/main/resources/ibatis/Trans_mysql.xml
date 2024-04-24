@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Trans">
+
+	<!-- <typeAlias  alias="dataMap" type="kr.infinisoft.common.util.DataMap"/>
+	<typeAlias  alias="loginInfo" type="kr.infinisoft.acct.admin.vo.LoginVO"/>
+	<typeAlias  alias="userInfo" type="kr.infinisoft.acct.admin.vo.LoginUserInfo"/>
+	<typeAlias  alias="transVO" type="kr.infinisoft.acct.admin.vo.TransSearchVO"/>
+	
+	
+	<select id="transListTotalCnt" parameterClass="transVO" resultClass="dataMap">
+		select
+			a.total_cnt,
+			a.success_cnt,
+			a.fail_cnt
+		from 
+			(
+				select
+					count(a.trans_seq) as total_cnt,
+					IFNULL(sum(if(a.result_code='0000',1,0)),0) as success_cnt,
+					IFNULL(sum(if(a.result_code!='0000',1,0)),0) as fail_cnt
+				from acct.tb_acct_trans a
+				where 1=1
+				and a.result_code is not null
+				and a.service_method = #serviceMethod#
+				<isNotEmpty property="merchantNo">
+					and a.merchant_no = #merchantNo#
+				</isNotEmpty>
+				<isNotEmpty property="resultCode">
+					<isEqual property="resultCode" compareValue="0000">
+						and a.result_code = #resultCode#
+					</isEqual>
+					<isEqual property="resultCode" compareValue="FFFF">
+						and a.result_code != '0000'
+					</isEqual>
+				</isNotEmpty>
+				<isNotEmpty property="bankCd">
+					and a.bank_cd = #bankCd#
+				</isNotEmpty>
+				<isNotEmpty property="frDt">
+					<![CDATA[ and DATE_FORMAT(a.regist_date,'%Y-%m-%d') >= date_format(#frDt#,'%Y-%m-%d') ]]>
+				</isNotEmpty>
+				<isNotEmpty property="toDt">
+					<![CDATA[ and DATE_FORMAT(a.regist_date,'%Y-%m-%d') <= date_format(#toDt#,'%Y-%m-%d') ]]>
+				</isNotEmpty>
+			) a
+	</select>
+	
+	<select id="transList" parameterClass="transVO" resultClass="dataMap">
+		select 
+			a.trans_seq,
+			a.merchant_no,
+			b.name as merchantName,
+			a.service_method,
+			(select value from acct.tb_acct_code x where x.groupcd = '0001' and x.codecd = a.bank_cd) as bank_nm,
+			a.iacct_no,
+			a.iacct_nm,
+			a.result_code,
+			a.result_msg,
+			date_format(a.regist_date,'%Y-%m-%d %H:%i:%s') as regist_date
+		from acct.tb_acct_trans a
+		left join acct.tb_acct_shop b on a.merchant_no = b.merchant_no
+		where 1=1
+		and a.result_code is not null
+		and a.service_method = #serviceMethod#
+		<isNotEmpty property="merchantNo">
+			and a.merchant_no = #merchantNo#
+		</isNotEmpty>
+		<isNotEmpty property="resultCode">
+			<isEqual property="resultCode" compareValue="0000">
+				and a.result_code = #resultCode#
+			</isEqual>
+			<isEqual property="resultCode" compareValue="FFFF">
+				and a.result_code != '0000'
+			</isEqual>
+		</isNotEmpty>
+		<isNotEmpty property="bankCd">
+			and a.bank_cd = #bankCd#
+		</isNotEmpty>
+		<isNotEmpty property="frDt">
+			<![CDATA[ and DATE_FORMAT(a.regist_date,'%Y-%m-%d') >= date_format(#frDt#,'%Y-%m-%d') ]]>
+		</isNotEmpty>
+		<isNotEmpty property="toDt">
+			<![CDATA[ and DATE_FORMAT(a.regist_date,'%Y-%m-%d') <= date_format(#toDt#,'%Y-%m-%d') ]]>
+		</isNotEmpty>
+		order by a.regist_date desc
+		<isGreaterThan property="perpage" compareValue="0">
+		limit #page#, #perpage#
+		</isGreaterThan>
+	</select>
+	
+	
+	<select id="transSumTotalCnt" parameterClass="transVO" resultClass="dataMap">
+		select
+			count(a.targetDate) as total_cnt
+		from 
+			(
+				select
+					<isEqual property="searchType" compareValue="byDate">
+						DATE_FORMAT(a.regist_date,'%Y-%m-%d') as targetDate,
+					</isEqual>
+					<isEqual property="searchType" compareValue="byMerchant">
+						a.merchant_no as targetDate,
+					</isEqual>
+					count(a.trans_seq) as total_cnt,
+					IFNULL(sum(if(a.result_code='0000',1,0)),0) as success_cnt,
+					IFNULL(sum(if(a.result_code!='0000',1,0)),0) as fail_cnt
+				from acct.tb_acct_trans a
+				where 1=1
+				and a.result_code is not null
+				and a.service_method = #serviceMethod#
+				<isNotEmpty property="merchantNo">
+					and a.merchant_no = #merchantNo#
+				</isNotEmpty>
+				<isNotEmpty property="resultCode">
+					<isEqual property="resultCode" compareValue="0000">
+						and a.result_code = #resultCode#
+					</isEqual>
+					<isEqual property="resultCode" compareValue="FFFF">
+						and a.result_code != '0000'
+					</isEqual>
+				</isNotEmpty>
+				<isNotEmpty property="bankCd">
+					and a.bank_cd = #bankCd#
+				</isNotEmpty>
+				<isNotEmpty property="frDt">
+					<![CDATA[ and DATE_FORMAT(a.regist_date,'%Y-%m-%d') >= date_format(#frDt#,'%Y-%m-%d') ]]>
+				</isNotEmpty>
+				<isNotEmpty property="toDt">
+					<![CDATA[ and DATE_FORMAT(a.regist_date,'%Y-%m-%d') <= date_format(#toDt#,'%Y-%m-%d') ]]>
+				</isNotEmpty>
+				<isEqual property="searchType" compareValue="byDate">
+					group by DATE_FORMAT(a.regist_date,'%Y-%m-%d')
+				</isEqual>
+				<isEqual property="searchType" compareValue="byMerchant">
+					group by a.merchant_no
+				</isEqual>
+			) a
+			
+	</select>
+	
+	
+	
+	<select id="transSumList" parameterClass="transVO" resultClass="dataMap">
+		select
+			<isEqual property="searchType" compareValue="byMerchant">
+				(select concat('[', a.targetDate, ']',x.name) from acct.tb_acct_shop x where x.merchant_no = a.targetDate ) as targetDate,
+			</isEqual>
+			<isEqual property="searchType" compareValue="byDate">
+				a.targetDate,
+			</isEqual>
+			a.total_cnt,
+			a.success_cnt,
+			a.fail_cnt
+		from 
+			(
+				select
+					<isEqual property="searchType" compareValue="byDate">
+						DATE_FORMAT(a.regist_date,'%Y-%m-%d') as targetDate,
+					</isEqual>
+					<isEqual property="searchType" compareValue="byMerchant">
+						a.merchant_no as targetDate,
+					</isEqual>
+					count(a.trans_seq) as total_cnt,
+					IFNULL(sum(if(a.result_code='0000',1,0)),0) as success_cnt,
+					IFNULL(sum(if(a.result_code!='0000',1,0)),0) as fail_cnt
+				from acct.tb_acct_trans a
+				where 1=1
+				and a.result_code is not null
+				and a.service_method = #serviceMethod#
+				<isNotEmpty property="merchantNo">
+					and a.merchant_no = #merchantNo#
+				</isNotEmpty>
+				<isNotEmpty property="resultCode">
+					<isEqual property="resultCode" compareValue="0000">
+						and a.result_code = #resultCode#
+					</isEqual>
+					<isEqual property="resultCode" compareValue="FFFF">
+						and a.result_code != '0000'
+					</isEqual>
+				</isNotEmpty>
+				<isNotEmpty property="bankCd">
+					and a.bank_cd = #bankCd#
+				</isNotEmpty>
+				<isNotEmpty property="frDt">
+					<![CDATA[ and DATE_FORMAT(a.regist_date,'%Y-%m-%d') >= date_format(#frDt#,'%Y-%m-%d') ]]>
+				</isNotEmpty>
+				<isNotEmpty property="toDt">
+					<![CDATA[ and DATE_FORMAT(a.regist_date,'%Y-%m-%d') <= date_format(#toDt#,'%Y-%m-%d') ]]>
+				</isNotEmpty>
+				<isEqual property="searchType" compareValue="byDate">
+					group by DATE_FORMAT(a.regist_date,'%Y-%m-%d')
+				</isEqual>
+				<isEqual property="searchType" compareValue="byMerchant">
+					group by a.merchant_no
+				</isEqual>
+			) a
+			<isGreaterThan property="perpage" compareValue="0">
+				limit #page#, #perpage#
+			</isGreaterThan>
+			
+	</select>
+	
+	
+	
+	
+	
+	
+	day Sum
+	
+		select
+			a.targetDate
+			a.total_cnt,
+			a.success_cnt,
+			a.fail_cnt
+		from 
+			(
+				select
+					DATE_FORMAT(a.regist_date,'%Y-%m-%d') as targetDate,
+					count(a.trans_seq) as total_cnt,
+					IFNULL(sum(if(a.result_code='0000',1,0)),0) as success_cnt,
+					IFNULL(sum(if(a.result_code!='0000',1,0)),0) as fail_cnt
+				from tb_acct_trans a
+				where 1=1
+				and a.service_method = '99'
+				and a.merchant_no = '10002'
+				and a.result_code != '0000'
+				 and DATE_FORMAT(a.regist_date,'%Y-%m-%d') >= date_format('2014-03-03','%Y-%m-%d') 
+				and DATE_FORMAT(a.regist_date,'%Y-%m-%d') <= date_format('2014-04-22','%Y-%m-%d') 
+				group by DATE_FORMAT(a.regist_date,'%Y-%m-%d')
+			) a
+	
+	
+	merchant Sum
+	
+	
+		select
+			a.targetDate,
+			a.total_cnt,
+			a.success_cnt,
+			a.fail_cnt
+		from 
+			(
+				select
+					a.merchant_no as targetDate,
+					count(a.trans_seq) as total_cnt,
+					IFNULL(sum(if(a.result_code='0000',1,0)),0) as success_cnt,
+					IFNULL(sum(if(a.result_code!='0000',1,0)),0) as fail_cnt
+				from tb_acct_trans a
+				where 1=1
+				and a.service_method = '99'
+				and a.merchant_no = '10002'
+				and a.result_code != '0000'
+				 and DATE_FORMAT(a.regist_date,'%Y-%m-%d') >= date_format('2014-03-03','%Y-%m-%d') 
+				and DATE_FORMAT(a.regist_date,'%Y-%m-%d') <= date_format('2014-04-22','%Y-%m-%d') 
+				group by a.merchant_no
+			) a
+	
+	
+	
+	 -->
+</sqlMap>

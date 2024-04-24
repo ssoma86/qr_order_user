@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+
+	<!-- ========================= JDBC RESOURCE DEFINITIONS ========================= -->
+<!--     <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"> -->
+<!--     	<property name="locations" value="classpath:conf/db.properties" /> -->
+<!--     </bean>	 -->
+	
+	<!-- <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driver}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="validationQuery" value="select 1" />
+		<property name="defaultAutoCommit" value="true" />
+		<property name="poolPreparedStatements" value="true" />
+		<property name="testOnBorrow" value="true"/>
+	</bean> -->
+	
+	<!-- 20200828 Connection 지연 문제 발생으로 재변경 -->
+<!-- 	<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close"> -->
+<!-- 		<property name="driverClassName" value="${jdbc.driver}" /> -->
+<!-- 		<property name="url" value="${jdbc.url}" /> -->
+<!-- 		<property name="username" value="${jdbc.username}" /> -->
+<!-- 		<property name="password" value="${jdbc.password}" /> -->
+<!-- 		<property name="defaultAutoCommit" value="true" /> -->
+<!-- 		<property name="validationQuery" value="SELECT 1" /> -->
+<!-- 		<property name="maxTotal" value="100"/> -->
+<!-- 		<property name="maxWaitMillis" value="5000"/> -->
+<!-- 		<property name="testOnBorrow" value="true"/> -->
+<!-- 		<property name="testWhileIdle" value="true"/> -->
+<!-- 		<property name="timeBetweenEvictionRunsMillis" value="120000"/> -->
+<!-- 	</bean>  -->
+	
+	<!-- <bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
+        <property name="jndiName" value="java:/comp/env/jdbc/INFINIPG" />
+    </bean> -->
+	
+<!--    	<bean id="sqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean"> -->
+<!--    		<property name="configLocation" value="classpath:conf/sqlMapConfig.xml" /> -->
+<!-- 		<property name="dataSource" ref="dataSource" /> -->
+<!--    	</bean> -->
+ 
+<!--    	<bean id="sqlMapClientTemplate" class="org.springframework.orm.ibatis.SqlMapClientTemplate"> -->
+<!--    		<property name="sqlMapClient" ref="sqlMapClient" />	 -->
+<!--    	</bean> -->
+   	
+<!--    	<bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager"> -->
+<!--         <property name="dataSource" ref="dataSource"/> -->
+<!--     </bean> -->
+</beans>
+
+<!-- <?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+
+	========================= JDBC RESOURCE DEFINITIONS =========================
+    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+    	<property name="locations" value="classpath:conf/db.properties" />
+    </bean>	
+	
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">	
+		<property name="driverClassName" value="${jdbc.driver}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="validationQuery" value="select 1" />
+		<property name="defaultAutoCommit" value="true" />
+		<property name="poolPreparedStatements" value="true" />
+		<property name="testOnBorrow" value="true"/>
+	</bean> 
+	
+   	<bean id="sqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
+   		<property name="configLocation" value="classpath:conf/sqlMapConfig.xml" />
+		<property name="dataSource" ref="dataSource" />
+   	</bean>
+ 
+   	<bean id="sqlMapClientTemplate" class="org.springframework.orm.ibatis.SqlMapClientTemplate">
+   		<property name="sqlMapClient" ref="sqlMapClient" />	
+   	</bean>
+	
+	
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+</beans> -->
